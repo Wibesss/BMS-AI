@@ -12,7 +12,7 @@ video = mp.VideoFileClip("video.mp4")
 audio_file = video.audio
 audio_file.write_audiofile("audio.wav")
 
-# Step 2: Load the audio and compute MFCCs
+# Step 2: Load the audio and compute MFCCsasdada
 audio_path = 'audio.wav'
 audio, sr = librosa.load(audio_path, sr=None)
 mfccs = librosa.feature.mfcc(y=audio, sr=sr)
