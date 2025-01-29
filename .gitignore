@@ -1,3 +1,5 @@
 /.venv
 *.wav
 *.mp4
+/BMS1
+/__pycache__
