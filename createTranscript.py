@@ -11,6 +11,7 @@ os.environ['LOKY_MAX_CPU_COUNT'] = '4'
 
 
 def createTranscript(numOfSpeaker, videoPath):
+    numOfSpeakers = int(numOfSpeaker)
     # Step 1: Extract audio from the video
     video = mp.VideoFileClip(videoPath)
     audio_file = video.audio
@@ -28,7 +29,7 @@ def createTranscript(numOfSpeaker, videoPath):
     # Step 3: Normalize MFCCs and apply clustering
     scaler = StandardScaler()
     mfccs_scaled = scaler.fit_transform(mfccs.T)
-    kmeans = KMeans(n_clusters=numOfSpeaker, random_state=42)
+    kmeans = KMeans(n_clusters=numOfSpeakers, random_state=42)
     speaker_labels = kmeans.fit_predict(mfccs_scaled)
 
     # Apply median filter for smoothing speaker labels

@@ -1,0 +1,13 @@
+@import "tailwindcss";
+
+input[type="text"],
+input[type="password"],
+input[type="number"],
+input[type="email"],
+select {
+  @apply w-full border border-blue-500 my-1 py-2 px-3 rounded-full;
+}
+
+.btn-prim {
+  @apply font-bold text-lg m-2 p-2 rounded-lg px-4 py-2 border-2 border-blue-500 bg-blue-500 text-white hover:bg-white hover:text-blue-500 duration-300;
+}
