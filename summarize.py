@@ -7,35 +7,31 @@ from flask_cors import CORS
 import os
 
 
-def summerize(numOfSpeakers, videoPath):
+def summarize(numOfSpeakers, videoPath):
     
     model_name = 'philschmid/bart-large-cnn-samsum'
 
-    # Ensure CUDA is available
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    print(device)
 
-    # Load model and tokenizer
     original_model = AutoModelForSeq2SeqLM.from_pretrained(
         model_name, 
-        torch_dtype=torch.bfloat16,  # Use bfloat16 if your GPU supports it
-        device_map="auto"  # Automatically map model layers to available devices
-    ).to(device)  # Move the model to GPU
+        torch_dtype=torch.bfloat16,
+        device_map="auto"
+    ).to(device)
 
     tokenizer = AutoTokenizer.from_pretrained("philschmid/bart-large-cnn-samsum")
 
     prompt = createTranscript(numOfSpeakers, videoPath)
 
-    # Tokenize input and move it to GPU
     inputs = tokenizer(prompt, return_tensors='pt').to(device)
 
     output = tokenizer.decode(
         original_model.generate(
         input_ids=inputs["input_ids"],
-        max_new_tokens=500,  # Generate up to 500 tokens
-        no_repeat_ngram_size=3,  # Avoid repetition of 3-grams
-        temperature=0.7,         # Control randomness (lower values are more deterministic)
-        top_p=0.9,               # Use nucleus sampling for diverse outputs
+        max_new_tokens=500,
+        no_repeat_ngram_size=3,
+        temperature=0.7,
+        top_p=0.9,
         )[0], 
         skip_special_tokens=True
     )
@@ -48,8 +44,6 @@ def summerize(numOfSpeakers, videoPath):
     
     return output
 
-
-
 app = Flask(__name__)
 CORS(app)
 
@@ -60,9 +54,10 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 @app.route("/upload", methods=["POST"])
 def upload_file():
     if "file" not in request.files:
-        return jsonify({"error": "No file part"}), 400
+        return jsonify({"error": "No file path"}), 400
 
     file = request.files["file"]
+    
     if file.filename == "":
         return jsonify({"error": "No selected file"}), 400
 
@@ -71,24 +66,24 @@ def upload_file():
 
     return jsonify({"message": "File uploaded successfully", "file_path": file_path})
 
-@app.route("/summerize", methods=["POST"])
-def generate_code():
-    data = request.get_json()
-    if data is None:
-        return jsonify({"error": "Invalid or missing JSON"}), 400
+@app.route("/summarize", methods=["POST"])
+def summarizeVideo():
     
-    videoPath = data.get("videoPath", "")
-    print(data.get("videoPath", ""))
-    print(data.get("numOfSpeakers", ""))
-    numOfSpeakers = data.get("numOfSpeakers", "")
+    if "file_path" not in request.form:
+        return jsonify({"error": "No file path"}), 400
+    
+    if "num_of_speakers" not in request.form:
+        return jsonify({"error": "No number of speakers"}), 400
+    
+    videoPath = request.form["file_path"]
+    numOfSpeakers = request.form["num_of_speakers"]
     
     if not videoPath:
-        print("No video Path received")
         return jsonify({"error": "Video path is required"}), 400
+
+    summarized = summarize(numOfSpeakers, videoPath)
     
-    summerizied = summerize(numOfSpeakers, videoPath)
-    
-    return jsonify({"summerized": summerizied})
+    return jsonify({"summarized": summarized})
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)

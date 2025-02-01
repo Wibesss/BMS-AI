@@ -8,28 +8,23 @@ import numpy as np
 
 huggingface_dataset_name = "knkarthick/dialogsum"
 
-# Load dataset
 dataset = load_dataset(huggingface_dataset_name)
 
 print(dataset)
 
-# Model and tokenizer setup
 model_name = 'google/flan-t5-base'
 
-# Ensure CUDA is available
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(device)
 
-# Load model and tokenizer
 original_model = AutoModelForSeq2SeqLM.from_pretrained(
     model_name, 
-    torch_dtype=torch.bfloat16,  # Use bfloat16 if your GPU supports it
-    device_map="auto"  # Automatically map model layers to available devices
-).to(device)  # Move the model to GPU
+    torch_dtype=torch.bfloat16,
+    device_map="auto"
+).to(device) 
 
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 
-# Example index
 index = 203
 
 dialogue = dataset['test'][index]['dialogue']
@@ -43,21 +38,19 @@ Summarize the following conversation.
 Summary:
 """
 
-# Tokenize input and move it to GPU
 inputs = tokenizer(prompt, return_tensors='pt').to(device)
 
 output = tokenizer.decode(
     original_model.generate(
     input_ids=inputs["input_ids"],
-    max_new_tokens=300,  # Generate up to 500 tokens
-    min_length=100,      # Ensure at least 100 tokens are generated
-    no_repeat_ngram_size=3,  # Avoid repetition of 3-grams
-    temperature=0.7,         # Control randomness (lower values are more deterministic)
-    top_p=0.9,               # Use nucleus sampling for diverse outputs
+    max_new_tokens=300,
+    min_length=100,
+    no_repeat_ngram_size=3, 
+    temperature=0.7,    
+    top_p=0.9,      
     )[0], 
     skip_special_tokens=True
 )
-
 
 dash_line = '-' * 100
 print(dash_line)
@@ -77,8 +70,6 @@ def tokenize_function(example):
     
     return example
 
-# The dataset actually contains 3 diff splits: train, validation, test.
-# The tokenize_function code is handling all data across all splits in batches.
 tokenized_datasets = dataset.map(tokenize_function, batched=True)
 tokenized_datasets = tokenized_datasets.remove_columns(['id', 'topic', 'dialogue', 'summary',])
 
@@ -94,15 +85,15 @@ output_dir = f'./dialogue-summary-training-{str(int(time.time()))}'
 training_args = TrainingArguments(
     output_dir=output_dir,
     learning_rate=1e-5,
-    num_train_epochs=4,  # Train for 4 epochs
+    num_train_epochs=4, 
     weight_decay=0.01,
-    logging_steps=10,  # Log every 10 steps
-    per_device_train_batch_size=6,  # Set batch size per device
-    save_steps=100,  # Save checkpoints every 100 steps
-    save_strategy='steps',  # Save checkpoints based on steps
-    save_total_limit=3,  # Keep only the last 3 checkpoints (to avoid excessive disk usage)
-    evaluation_strategy='steps',  # Evaluate the model at regular intervals
-    eval_steps=100  # Evaluate every 100 steps
+    logging_steps=10, 
+    per_device_train_batch_size=6,  
+    save_steps=100,  
+    save_strategy='steps',  
+    save_total_limit=3, 
+    evaluation_strategy='steps',  
+    eval_steps=100  
 )
 
 
@@ -138,9 +129,9 @@ trainer.save_model("./BMS1")
 #     num_train_epochs=4,
 #     logging_steps=10,
 #     per_device_train_batch_size=6,
-#     save_strategy="steps",  # Save checkpoints every 100 steps
+#     save_strategy="steps",
 #     save_steps=100,
-#     save_total_limit=3  # Limit the number of saved checkpoints to the last 3
+#     save_total_limit=3
 # )
 
     

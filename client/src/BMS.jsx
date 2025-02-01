@@ -1,48 +1,82 @@
 import React, { useState } from "react";
+import axios from "axios";
 
 function BMS() {
   // State to hold the number input, file upload, and text input
-  const [number, setNumber] = useState(0);
+  const [numOfSpeakers, setNumOfSpeakers] = useState(0);
   const [file, setFile] = useState(null);
-  const [text, setText] = useState(""); // New state for the textarea
 
-  const api = "http://127.0.0.1:5000"
+  const [fileUploaded, setFileUploaded] = useState(false);
+  const [uploadedFilePath, setUploadedFilePath] = useState("");
 
-  // Handle number input change
-  const handleNumberChange = (event) => {
-    setNumber(event.target.value);
+  const [summarizing, setSummarazing] = useState(false);
+  const [summarized, setSummarized] = useState(""); // New state for the textarea
+
+  const api = "http://127.0.0.1:5000";
+
+  const handleNumOfSpeakersChange = (event) => {
+    setNumOfSpeakers(event.target.value);
   };
 
-  // Handle file input change
   const handleFileChange = (event) => {
     setFile(event.target.files[0]);
   };
 
-  // Handle text input change (textarea)
-  const handleTextChange = (event) => {
-    setText(event.target.value);
-  };
-
-  // Handle file upload (simulated)
-  const handleUpload = () => {
+  const handleUpload = async () => {
     if (!file) {
-      alert("Please upload a file.");
+      alert("Please select a file first.");
       return;
     }
-    alert(`File ${file.name} uploaded successfully!`);
-    // Add logic to handle actual file upload (e.g., using FormData and an API)
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const response = await axios.post(`${api}/upload`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      setFileUploaded(true);
+      setUploadedFilePath(response.data.file_path);
+      alert(response.data.message);
+    } catch (error) {
+      console.error("Upload failed:", error);
+      alert("Error uploading file.");
+    }
   };
 
-  // Handle file summarize (simulated)
-  const handleSummarize = () => {
-    if (!file) {
+  const handleSummarize = async () => {
+    if (!fileUploaded) {
       alert("Please upload a file to summarize.");
       return;
     }
-    alert(
-      `Summarizing file ${file.name} with number ${number} and text: ${text}`
-    );
-    // Add logic for actual summarization here
+
+    if (numOfSpeakers === 0) {
+      alert("Please input the number of speakers.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file_path", uploadedFilePath);
+    formData.append("num_of_speakers", numOfSpeakers);
+
+    try {
+      setSummarazing(true);
+
+      const response = await axios.post(`${api}/summarize`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      setSummarazing(false);
+      setSummarized(response.data.summarized);
+    } catch (error) {
+      console.error("Summarization failed:", error);
+      alert("Error during summarization.");
+    }
   };
 
   return (
@@ -53,12 +87,12 @@ function BMS() {
 
       <div className="mb-4">
         <label className="text-xl text-blue-500 m-2 font-bold block">
-          {"Number of Participants: "}
+          {"Number of speakers: "}
           <input
             className="bg-slate-600 text-xl p-1 font-semibold w-1/5 h-1/4 text-slate-300 "
             type="number"
-            value={number}
-            onChange={handleNumberChange}
+            value={numOfSpeakers}
+            onChange={handleNumOfSpeakersChange}
           />
         </label>
       </div>
@@ -71,7 +105,7 @@ function BMS() {
         </div>
         <input
           type="file"
-          accept="video/*" // Only allow video files
+          accept="video/*"
           onChange={handleFileChange}
           className="hidden"
           id="fileUpload"
@@ -90,13 +124,12 @@ function BMS() {
         </button>
       </div>
 
-      {/* Textarea */}
       <label className="text-3xl text-blue-500 m-2 font-bold">Summary:</label>
       <textarea
-        value={text}
-        onChange={handleTextChange}
+        value={summarizing ? "Summarazing..." : summarized}
         placeholder="The summary of your meeting will appear here..."
         className="bg-slate-600 text-2xl p-2 font-semibold h-1/4 text-slate-300 resize-none"
+        readOnly
       />
     </div>
   );
