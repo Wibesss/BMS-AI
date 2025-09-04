@@ -2,4 +2,5 @@
 *.wav
 *.mp4
 /BMS1
+/BMS
 /__pycache__

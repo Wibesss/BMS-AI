@@ -9,7 +9,7 @@ import os
 
 def summarize(numOfSpeakers, videoPath):
     
-    model_name = 'philschmid/bart-large-cnn-samsum'
+    model_name = './BMS'
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -19,7 +19,7 @@ def summarize(numOfSpeakers, videoPath):
         device_map="auto"
     ).to(device)
 
-    tokenizer = AutoTokenizer.from_pretrained("philschmid/bart-large-cnn-samsum")
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
 
     prompt = createTranscript(numOfSpeakers, videoPath)
 

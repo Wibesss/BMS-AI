@@ -12,7 +12,7 @@ dataset = load_dataset(huggingface_dataset_name)
 
 print(dataset)
 
-model_name = 'google/flan-t5-base'
+model_name = 'philschmid/bart-large-cnn-samsum'
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(device)
